@@ -1,6 +1,8 @@
 import pycom
 import time
+'''
 pycom.heartbeat(False)
+
 for cycles in range(10):  # stop after 10 cycles
     pycom.rgbled(0x007f00)  # green
     time.sleep(5)
@@ -9,3 +11,14 @@ for cycles in range(10):  # stop after 10 cycles
     pycom.rgbled(0x7f0000)  # red
     time.sleep(4)
     print("light")
+'''
+
+import temperature
+
+temp = temperature.get_temperature()
+
+if temp:
+    pycom.heartbeat(False)
+    pycom.rgbled(0x7f0000)
+    print('OK')
+    print(temp)
