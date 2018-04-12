@@ -1,15 +1,34 @@
 var express = require('express');
 var router = express.Router();
 
-var dbLogic = require('../domain/Domain');
-new dbLogic.Domain();
+var domain = require('../domain/Domain');
+var path = require("path");
+new domain.Domain();
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-    var response = dbLogic.Domain.prototype.test();
-    dbLogic.Domain.prototype.test2(res);
-   // res.render('index', {title: response});
-
+    domain.Domain.prototype.getAllTemperatures();
+    res.sendFile(path.resolve("test.html"));
+    // res.render('index', {title: response});
 });
+
+router.get('/temperature', function (req, res, next) {
+    var response = domain.Domain.prototype.getAllTemperatures();
+
+    response.then(function (msg) {
+        console.log(msg);
+        console.log("Promise resolved as " + JSON.stringify(msg));
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(msg));
+    });
+});
+
+
+router.post('/temperature', function (req, res, next) {
+   // console.log(req.body);
+    domain.Domain.prototype.saveTemperature(req.body);
+    res.status(200).json('success');
+});
+
 
 module.exports = router;

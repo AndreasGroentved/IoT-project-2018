@@ -1,4 +1,5 @@
 import {Database} from "../data/Database";
+import {TempNode} from "./TempNode";
 
 let dbx;
 
@@ -8,12 +9,20 @@ export class Domain {
         dbx = new Database();
     }
 
-    test(){
+    test() {
         return "nailed it";
     }
 
-    test2(res){
-        dbx.test(res);
+    getAllTemperatures(): Promise<TempNode[]> {
+        return dbx.getAllTemperatures();
+    }
+
+    saveTemperature(json) {
+        console.log("save yo");
+        const temperature = json.temperature;
+        const time = json.time;
+        console.log("temp " + temperature + ", time " + time);
+        dbx.saveTemperature(temperature, time);
     }
 
 }

@@ -9,8 +9,15 @@ class Domain {
     test() {
         return "nailed it";
     }
-    test2(res) {
-        dbx.test(res);
+    getAllTemperatures() {
+        return dbx.getAllTemperatures();
+    }
+    saveTemperature(json) {
+        console.log("save yo");
+        const temperature = json.temperature;
+        const time = json.time;
+        console.log("temp " + temperature + ", time " + time);
+        dbx.saveTemperature(temperature, time);
     }
 }
 exports.Domain = Domain;
