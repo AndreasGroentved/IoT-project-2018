@@ -8,7 +8,7 @@ new dbLogic.Domain();
 router.get('/', function (req, res, next) {
     var response = dbLogic.Domain.prototype.test();
     dbLogic.Domain.prototype.test2(res);
-    res.render('index', {title: response});
+   // res.render('index', {title: response});
 
 });
 
