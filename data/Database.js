@@ -13,11 +13,12 @@ firebase.initializeApp(config);
 class Database {
     constructor() {
     }
-    test() {
-        firebase.database().ref('/Temperatures/').once('value')
+    test(res) {
+        firebase.database().ref('/Temperatures').once('value')
             .then((snapshot) => {
             snapshot.forEach((doc) => {
                 console.log(doc.id, '=>', doc.data());
+                res.render('index', { title: doc.date() });
             });
         })
             .catch((err) => {

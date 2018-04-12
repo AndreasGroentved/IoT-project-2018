@@ -12,8 +12,8 @@ export class Domain {
         return "nailed it";
     }
 
-    test2(){
-        dbx.test();
+    test2(res){
+        dbx.test(res);
     }
 
 }

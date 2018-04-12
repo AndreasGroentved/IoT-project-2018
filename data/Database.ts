@@ -16,14 +16,14 @@ export class Database {
     }
 
 
-    test() {
+    test(res) {
 
-        firebase.database().ref('/Temperatures/').once('value')
+        firebase.database().ref('/Temperatures').once('value')
             .then((snapshot) => {
                 snapshot.forEach((doc) => {
 
                     console.log(doc.id, '=>', doc.data());
-
+                    res.render('index', {title: doc.date()});
                 });
             })
             .catch((err) => {

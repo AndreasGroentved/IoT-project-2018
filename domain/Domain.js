@@ -9,8 +9,8 @@ class Domain {
     test() {
         return "nailed it";
     }
-    test2() {
-        dbx.test();
+    test2(res) {
+        dbx.test(res);
     }
 }
 exports.Domain = Domain;
