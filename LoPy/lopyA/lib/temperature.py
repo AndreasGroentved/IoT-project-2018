@@ -1,6 +1,13 @@
-from SI7006A20 import SI7006A20 as TempSensor
+import SI7006A20
 
-tsensor = TempSensor()
+tsensor = SI7006A20.SI7006A20()
+
 
 def get_temperature():
-    return { 'temperature' : tsensor.temperature(), 'humidity' : tsensor.humidity()}
+    return Temp(tsensor.temperature(), tsensor.humidity())
+
+
+class Temp:
+    def __init__(self, temperature, humidity):
+        self.temperature = temperature
+        self.humidity = humidity
