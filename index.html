@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>IoT</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script src="https://code.highcharts.com/modules/exporting.js"></script>
+        <script src="https://code.highcharts.com/modules/export-data.js"></script>
+        <script>
+            var values = {'temperature': [], 'time': []};
+            
+            $(document).ready(function () {
+                getData()
+
+            });
+
+            function getData() {
+                $.ajax({
+                        url: 'https://iot-web-app-2018.herokuapp.com/temperature',
+                        method: 'GET',
+                        dataType: 'json',
+                        success: handleData
+                    });
+            }
+
+            function handleData(result) {
+                $('#data').text(JSON.stringify(result))
+
+                result.forEach(function (element) {
+                    values.temperature.push(element.temperature)
+                    values.time.push(new Date(element.time).toISOString())
+                });
+
+                console.log(values)
+                
+                Highcharts.chart('container', {
+
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: 'We nailed it'
+                    },
+                    xAxis: {
+                        categories: window.values.time
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Value'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                enabled: true
+                            },
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: 'Temperature',
+                        data: window.values.temperature
+                    }/*, {
+                        name: 'Light',
+                        data: window.values.light
+                    }*/]
+                    });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="data"></div>
+        <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+</body>
+</html>

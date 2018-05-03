@@ -8,7 +8,7 @@ new domain.Domain();
 /* GET home page. */
 router.get('/', function (req, res, next) {
     domain.Domain.prototype.getAllTemperatures();
-    res.sendFile(path.resolve("test.html"));
+    res.sendFile(path.resolve("index.html"));
     // res.render('index', {title: response});
 });
 
