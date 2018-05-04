@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#tempInput").submit((function () {
+                event.preventDefault();
+                var time = new Date().getTime();
+                var temperature = $("#temp").val();
+                $.ajax({
+                    url: "temperature",
+                    method: "POST",
+                    data: {temperature: temperature, time: time},
+                    dataType: "html"
+                }).done(function () {
+                    console.log("done");
+                });
+            }));
+
+        });
+    </script>
+</head>
+<body>
+<form id="tempInput">
+    Temperature:<br>
+    <input type="text" name="temperature" id="temp">
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>
