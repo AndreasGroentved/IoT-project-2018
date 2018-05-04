@@ -16,9 +16,9 @@ Europe = LoRa.EU868
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 # create an OTA authentication params
-dev_eui = binascii.unhexlify('AABBCCDDEEFF7778')
-app_eui = binascii.unhexlify('70B3D57EF0003BFD')
-app_key = binascii.unhexlify('36AB7625FE770B6881683B495300FFD6')
+dev_eui = binascii.unhexlify('30AEA4FFFE505654')
+app_eui = binascii.unhexlify('70B3D57ED000BDA0')
+app_key = binascii.unhexlify('6D08E6C2C4237B3A1D223404713DF335')
 
 # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
 lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
@@ -26,12 +26,14 @@ lora.add_channel(1, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
 lora.add_channel(2, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
 
 # join a network using OTAA
-lora.join(activation=LoRa.OTAA, auth=('1234567890123456', '70B3D57ED000BDA0', '6D08E6C2C4237B3A1D223404713DF335'), timeout=0, dr=config.LORA_NODE_DR)
+lora.join(activation=LoRa.OTAA, auth=(dev_eui, app_eui, app_key), timeout=0, dr=config.LORA_NODE_DR)
 
 # wait until the module has joined the network
 while not lora.has_joined():
     time.sleep(2.5)
     print('Not joined yet...')
+
+print('Joined')
 
 # remove all the non-default channels
 for i in range(3, 16):
@@ -48,6 +50,11 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
+pkt = b'{"temperature": 30.3,"time":1523803045000}'
+print('Sending:', pkt)
+s.send(pkt)
+
+'''
 for i in range (200):
     pkt = b'PKT #' + bytes([i])
     print('Sending:', pkt)
@@ -57,3 +64,4 @@ for i in range (200):
     if rx:
         print('Received: {}, on port: {}'.format(rx, port))
     time.sleep(6)
+'''

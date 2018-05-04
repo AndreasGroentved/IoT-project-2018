@@ -186,7 +186,7 @@ class NanoGateway:
             self.rxok += 1
             rx_data = self.lora_sock.recv(256)
             stats = lora.stats()
-            self._push_data(self._make_node_packet(rx_data, self.rtc.now(), stats.timestamp, stats.sf, stats.rssi, stats.snr))
+            self._push_data(self._make_node_packet(rx_data, self.rtc.now(), stats.rx_timestamp, stats.sf, stats.rssi, stats.snr))
             self.rxfw += 1
         if events & LoRa.TX_PACKET_EVENT:
             self.txnb += 1
