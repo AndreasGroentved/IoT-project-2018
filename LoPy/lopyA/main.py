@@ -19,14 +19,13 @@ if __name__ == '__main__':
         ssid=config.WIFI_SSID,
         password=config.WIFI_PASS,
         server=config.SERVER,
-        port=config.PORT,
-        ntp_server=config.NTP,
-        ntp_period=config.NTP_PERIOD_S
+        port=config.PORT
         )
 
     nanogw.start()
-    nanogw._log('You may now press ENTER to enter the REPL')
-    input()
+    print('Started!')
+    #nanogw._log('You may now press ENTER to enter the REPL')
+    #input()
 
 
 def getTime():
@@ -51,13 +50,14 @@ def getTemps():
 
 # temperatures = list()
 
+'''
 while True:
     thetemp = temperature.get_temperature()
     #   temperatures.append(thetemp)
     # print(postTemp(thetemp.temperature))
     print(thetemp.temperature)
     time.sleep(1)
-
+'''
 
 # for cycles in range(10):  # stop after 10 cycles
 #     pycom.rgbled(0x007f00)  # green

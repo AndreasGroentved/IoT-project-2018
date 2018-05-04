@@ -50,7 +50,7 @@ TX_ACK_PK = {"txpk_ack":{"error":""}}
 class NanoGateway:
 
     def __init__(self, id, frequency, datarate, ssid, password, server, port, ntp='pool.ntp.org', ntp_period=3600):
-            self.id = id
+        self.id = id
         self.frequency = frequency
         self.sf = self._dr_to_sf(datarate)
         self.ssid = ssid
@@ -62,13 +62,13 @@ class NanoGateway:
 
         self.rxnb = 0
         self.rxok = 0
-                self.rxfw = 0
-                self.dwnb = 0
-                self.txnb = 0
+        self.rxfw = 0
+        self.dwnb = 0
+        self.txnb = 0
 
         self.stat_alarm = None
-                self.pull_alarm = None
-                self.uplink_alarm = None
+        self.pull_alarm = None
+        self.uplink_alarm = None
 
         self.udp_lock = _thread.allocate_lock()
 
