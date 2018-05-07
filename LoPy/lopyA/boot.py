@@ -21,6 +21,7 @@ for net in nets:
             machine.idle() # save power while waiting
         print('WLAN connection succeeded!')
         setTime()
+        wlan.deinit()
         break
 
 

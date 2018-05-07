@@ -1,5 +1,5 @@
 import {Database} from "../data/Database";
-import {TempNode} from "./TempNode";
+import {Node} from "./Node";
 
 let dbx;
 
@@ -13,16 +13,19 @@ export class Domain {
         return "nailed it";
     }
 
-    getAllTemperatures(): Promise<TempNode[]> {
+    getAllTemperatures(): Promise<Node[]> {
         return dbx.getAllTemperatures();
     }
 
     saveTemperature(json) {
-        console.log("save yo");
-        const temperature = json.temperature;
+        const temp = json.temperature;
+        const light = json.light;
+        const id = json.id;
         const time = json.time;
-        console.log("temp " + temperature + ", time " + time);
-        dbx.saveTemperature(temperature, time);
+        //let node:Node = JSON.parse(json);
+        const node: Node = new Node(temp, light, time, id);
+        console.log(node);
+        dbx.saveTemperature(node);
     }
 
 }
