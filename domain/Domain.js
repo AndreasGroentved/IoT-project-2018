@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Database_1 = require("../data/Database");
+const Node_1 = require("./Node");
 let dbx;
 class Domain {
     constructor() {
@@ -13,11 +14,14 @@ class Domain {
         return dbx.getAllTemperatures();
     }
     saveTemperature(json) {
-        console.log("save yo");
-        const temperature = json.temperature;
+        const temp = json.temperature;
+        const light = json.light;
+        const id = json.id;
         const time = json.time;
-        console.log("temp " + temperature + ", time " + time);
-        dbx.saveTemperature(temperature, time);
+        //let node:Node = JSON.parse(json);
+        const node = new Node_1.Node(temp, light, time, id);
+        console.log(node);
+        dbx.saveTemperature(node);
     }
 }
 exports.Domain = Domain;

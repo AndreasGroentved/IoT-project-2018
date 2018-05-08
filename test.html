@@ -10,10 +10,12 @@
                 event.preventDefault();
                 var time = new Date().getTime();
                 var temperature = $("#temp").val();
+                var light = $("#light").val();
+                var id = $("#id").val();
                 $.ajax({
                     url: "temperature",
                     method: "POST",
-                    data: {temperature: temperature, time: time},
+                    data: {temperature: temperature, light: light, id: id, time: time},
                     dataType: "html"
                 }).done(function () {
                     console.log("done");
@@ -27,6 +29,15 @@
 <form id="tempInput">
     Temperature:<br>
     <input type="text" name="temperature" id="temp">
+    <br>
+    Light
+    <br>
+    <input type="text" name="light" id="light">
+    <br>
+    Id
+    <br>
+    <input type="text" name="id" id="id">
+    <br>
     <input type="submit" value="Submit">
 </form>
 </body>

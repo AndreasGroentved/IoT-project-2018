@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const TempNode_1 = require("../domain/TempNode");
+const Node_1 = require("../domain/Node");
 let firebase = require('firebase');
 const config = {
     apiKey: "AIzaSyAAaoGd7pd77x52d2sO-NPmH3buLRS-sTk",
@@ -17,10 +17,10 @@ class Database {
             console.log("yolo");
             firebase.database().ref('/Temperatures/').once('value')
                 .then((snapshot) => {
-                var nodes = [];
+                let nodes = [];
                 snapshot.forEach((doc) => {
                     if (doc.val().temperature != null) {
-                        let tempNode = new TempNode_1.TempNode(doc.val().temperature, doc.val().time);
+                        let tempNode = new Node_1.Node(doc.val().temperature, doc.val().light, doc.val().time, doc.val().id);
                         console.log(tempNode);
                         nodes.push(tempNode);
                     }
@@ -33,11 +33,13 @@ class Database {
             });
         });
     }
-    saveTemperature(temperature, time) {
+    saveTemperature(node) {
         console.log("save");
         firebase.database().ref('Temperatures/').push({
-            temperature: temperature,
-            time: time
+            temperature: node.temperature,
+            time: node.time,
+            light: node.light,
+            id: node.id
         }).then(function (val) {
             console.log(val);
         });

@@ -1,4 +1,4 @@
-import {TempNode} from "../domain/TempNode";
+import {Node} from "../domain/Node";
 
 let firebase = require('firebase');
 
@@ -15,15 +15,15 @@ export class Database {
 
     }
 
-    getAllTemperatures(): Promise<TempNode[]> {
-        return new Promise<TempNode[]>((resolve) => {
+    getAllTemperatures(): Promise<Node[]> {
+        return new Promise<Node[]>((resolve) => {
             console.log("yolo");
             firebase.database().ref('/Temperatures/').once('value')
                 .then((snapshot) => {
-                    var nodes: Array<TempNode> = [];
+                    let nodes: Array<Node> = [];
                     snapshot.forEach((doc) => {
                         if (doc.val().temperature != null) {
-                            let tempNode: TempNode = new TempNode(doc.val().temperature, doc.val().time);
+                            let tempNode: Node = new Node(doc.val().temperature, doc.val().light, doc.val().time, doc.val().id);
                             console.log(tempNode);
                             nodes.push(tempNode);
                         }
@@ -38,11 +38,13 @@ export class Database {
     }
 
 
-    saveTemperature(temperature: number, time: Number) {
+    saveTemperature(node: Node) {
         console.log("save");
         firebase.database().ref('Temperatures/').push({
-            temperature: temperature,
-            time: time
+            temperature: node.temperature,
+            time: node.time,
+            light: node.light,
+            id: node.id
         }).then(function (val) {
             console.log(val);
         });
