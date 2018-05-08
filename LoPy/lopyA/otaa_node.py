@@ -16,9 +16,11 @@ Europe = LoRa.EU868
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 # create an OTA authentication params
-dev_eui = binascii.unhexlify('30AEA4FFFE505654')
+#dev_eui = binascii.unhexlify('30AEA4FFFE505654')
+dev_eui = binascii.unhexlify('3AAEA4FFFE505654')
 app_eui = binascii.unhexlify('70B3D57ED000BDA0')
-app_key = binascii.unhexlify('6D08E6C2C4237B3A1D223404713DF335')
+#app_key = binascii.unhexlify('6D08E6C2C4237B3A1D223404713DF335')
+app_key = binascii.unhexlify('705DFC1AF37D90FB858F510EAFAAAE14')
 
 # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
 lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
@@ -50,13 +52,18 @@ s.setblocking(False)
 
 time.sleep(5.0)
 
+'''
 pkt = b'{"temperature": 30.3,"time":1523803045000}'
 print('Sending:', pkt)
 s.send(pkt)
-
+time.sleep(4)
+rx, port = s.recvfrom(256)
+if rx:
+    print('Received: {}, on port: {}'.format(rx, port))
 '''
-for i in range (200):
-    pkt = b'PKT #' + bytes([i])
+
+for i in range (2):
+    pkt = bytes([i])
     print('Sending:', pkt)
     s.send(pkt)
     time.sleep(4)
@@ -64,4 +71,3 @@ for i in range (200):
     if rx:
         print('Received: {}, on port: {}'.format(rx, port))
     time.sleep(6)
-'''

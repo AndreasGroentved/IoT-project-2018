@@ -44,7 +44,7 @@ time.sleep(5.0)
 
 """ Your own code can be written below! """
 
-for i in range (200):
+for i in range (20):
     s.send(b'PKT #' + bytes([i]))
     time.sleep(4)
     rx = s.recv(256)

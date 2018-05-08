@@ -23,7 +23,7 @@ if __name__ == '__main__':
         )
 
     nanogw.start()
-    print('Started!')
+    nanogw._log('Started!')
     #nanogw._push_data(bytes("[{temperature: 23, time: 12333}]", 'utf-8'))
     #nanogw._log('You may now press ENTER to enter the REPL')
     #input()
