@@ -42,7 +42,7 @@ router.post('/lora', function (req, res, next) {
     var data = req.body.payload_fields;
     console.log("data");
     console.log(data);
-    domain.Domain.prototype.saveTemperature(data);
+    domain.Domain.prototype.saveTemperature(data.res);
     res.status(200).json('success');
 });
 

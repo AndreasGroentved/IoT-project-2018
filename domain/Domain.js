@@ -14,15 +14,17 @@ class Domain {
         return dbx.getAllTemperatures();
     }
     saveTemperature(json) {
-        const temp = json.temperature;
-        const light = json.light;
-        const id = json.id;
-        const time = json.time;
-        console.log("id " + id);
-        //let node:Node = JSON.parse(json);
-        const node = new Node_1.Node(temp, light, time, id);
-        console.log(node);
-        dbx.saveTemperature(node);
+        for (let i in json.light) { //Assume all arrays have same size or is corrupt
+            const temp = json.temperature[i];
+            const light = json.light[i];
+            const id = json.id;
+            const time = json.time[i];
+            console.log("id " + id);
+            //let node:Node = JSON.parse(json);
+            const node = new Node_1.Node(temp, light, time, id);
+            console.log(node);
+            dbx.saveTemperature(node);
+        }
     }
 }
 exports.Domain = Domain;

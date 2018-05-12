@@ -3,6 +3,7 @@ import socket
 
 import machine
 import pycom
+import ubinascii
 import utime
 from machine import Pin
 from machine import Timer
@@ -13,8 +14,6 @@ import sensor
 
 # TODO synkronize every hour, for demo use button
 # TODO possible time problem
-# TODO save data
-# TODO retrieve data
 # TODO send data lora
 # TODO Format data to send
 # TODO format data to save
@@ -48,12 +47,16 @@ def restoreTempList():
 def updateLists():
     global lightList
     global tempList
+    global timeList
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
+    timeValue = getTime()
     lightValue = (lightValue[0] + lightValue[1])
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
+    timeList = updateList(timeList, timeValue)
     saveLists()
+    print(buildString())
 
 
 def updateList(data: list, new: str):
@@ -98,10 +101,11 @@ def buildString():
     lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
     tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
     timeString = '[' + ', '.join('"{0}"'.format(w) for w in timeList) + ']'
-    return "{'id':'" + getId() + "','time':[" + lightString + "],'temperature':[" + tempString + "], 'light':[" + timeString + "]}"
+    print(lightString)
+    return "{'id':'" + getId() + "','time':" + lightString + ",'temperature':" + tempString + ", 'light':" + timeString + "}"
 
 
-def getId(): return machine.unique_id()
+def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
 def sendLora(dataString):

@@ -11,23 +11,19 @@ pycom.heartbeat(False)
 pycom.rgbled(0x7f00000)
 
 
-
-
-
 def setTime():
     rtc = machine.RTC()
     rtc.ntp_sync("pool.ntp.org")
     while not rtc.synced():
-        pass
+        utime.sleep_ms(50)
     print(utime.time())
     print(rtc.now())
 
 
 print("reboot")
-print(utime.time())
+print(int(utime.time() * 1000))
 print("sup")
 
-# utime.sleep(10)
 # if utime.time() < 100:
 #     wlan = WLAN(mode=WLAN.STA)
 #     nets = wlan.scan()
