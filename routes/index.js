@@ -38,10 +38,8 @@ router.post('/temperature', function (req, res, next) {
 
 
 router.post('/lora', function (req, res, next) {
-    console.log(req.body);
     var data = req.body.payload_fields;
-    console.log("data");
-    console.log(data);
+    console.log(data.res);
     domain.Domain.prototype.saveTemperature(data.res);
     res.status(200).json('success');
 });

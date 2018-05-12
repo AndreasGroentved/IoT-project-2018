@@ -14,7 +14,11 @@ class Domain {
         return dbx.getAllTemperatures();
     }
     saveTemperature(json) {
+        console.log("sup");
+        json = JSON.parse(json);
+        console.log(json.light);
         for (let i in json.light) { //Assume all arrays have same size or is corrupt
+            console.log("loop");
             const temp = json.temperature[i];
             const light = json.light[i];
             const id = json.id;

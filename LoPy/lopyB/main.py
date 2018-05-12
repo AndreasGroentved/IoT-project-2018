@@ -1,5 +1,4 @@
 import gc
-import socket
 
 import machine
 import pycom
@@ -7,8 +6,8 @@ import ubinascii
 import utime
 from machine import Pin
 from machine import Timer
-from network import LoRa
 
+import lora
 import sd
 import sensor
 
@@ -27,7 +26,7 @@ pycom.rgbled(0x7f00000)
 tempList = []
 lightList = []
 timeList = []
-limit = 5  # for testing
+limit = 3  # for testing
 hourDivision = 3600000
 fiveMinutes = 300000
 
@@ -45,18 +44,22 @@ def restoreTempList():
 
 
 def updateLists():
+    print("updateLists")
     global lightList
     global tempList
     global timeList
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
-    timeValue = getTime()
-    lightValue = (lightValue[0] + lightValue[1])
+    timeValue = str(getTime())
+    lightValue = (lightValue[0] + lightValue[1]) / 2
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
     timeList = updateList(timeList, timeValue)
     saveLists()
-    print(buildString())
+    print(len(lightList))
+    print(limit)
+    if len(lightList) == limit:
+        doUpdate()
 
 
 def updateList(data: list, new: str):
@@ -89,12 +92,22 @@ def updateData():
     light = sensor.light
     tempList.append(temp)
     lightList.append(light)
+    print(len(lightList))
+    print(limit)
+    if len(lightList) == limit:
+        doUpdate()
 
-    # machine.deepsleep(5000)
+
+def clear():
+    del tempList[:]
+    del timeList[:]
+    del lightList[:]
 
 
 def doUpdate():
-    sendLora(buildString())
+    sendToServer(buildString())
+    clear()
+    saveLists()
 
 
 def buildString():
@@ -102,17 +115,17 @@ def buildString():
     tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
     timeString = '[' + ', '.join('"{0}"'.format(w) for w in timeList) + ']'
     print(lightString)
-    return "{'id':'" + getId() + "','time':" + lightString + ",'temperature':" + tempString + ", 'light':" + timeString + "}"
+    return "{\"id\":\"" + getId() + "\",\"time\":" + lightString + ",\"temperature\":" + tempString + ", \"light\":" + timeString + "}"
 
 
 def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
-def sendLora(dataString):
-    lora = LoRa(mode=LoRa.LORA, region=LoRa.EU868)
-    s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
-    s.setblocking(False)
-    s.send(dataString)
+def sendToServer(dataString):
+    print("init")
+    print(dataString)
+    lora.init()
+    lora.send(dataString)
 
 
 def initOperations():

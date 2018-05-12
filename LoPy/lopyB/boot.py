@@ -24,16 +24,16 @@ print("reboot")
 print(int(utime.time() * 1000))
 print("sup")
 
-# if utime.time() < 100:
-#     wlan = WLAN(mode=WLAN.STA)
-#     nets = wlan.scan()
-#     for net in nets:
-#         if net.ssid == 'SDU-GUEST':
-#             print('Network found!')
-#             wlan.connect(net.ssid, auth=(net.sec, ''), timeout=5000)
-#             while not wlan.isconnected():
-#                 machine.idle()  # save power while waiting
-#             print('WLAN connection succeeded!')
-#             setTime()
-#             wlan.deinit()
-#             break
+if utime.time() < 100:
+    wlan = WLAN(mode=WLAN.STA)
+    nets = wlan.scan()
+    for net in nets:
+        if net.ssid == 'SDU-GUEST':
+            print('Network found!')
+            wlan.connect(net.ssid, auth=(net.sec, ''), timeout=5000)
+            while not wlan.isconnected():
+                machine.idle()  # save power while waiting
+            print('WLAN connection succeeded!')
+            setTime()
+            wlan.deinit()
+            break
