@@ -1,72 +1,52 @@
-
+import binascii
+import socket
 import time
-import pycom
-import utime
-from machine import RTC
 
-import requests
-import temperature
-
-""" LoPy LoRaWAN Nano Gateway example usage """
+from network import LoRa
 
 import config
-from nanogateway import NanoGateway
 
-if __name__ == '__main__':
-    nanogw = NanoGateway(
-        id=config.GATEWAY_ID,
-        frequency=config.LORA_FREQUENCY,
-        datarate=config.LORA_GW_DR,
-        ssid=config.WIFI_SSID,
-        password=config.WIFI_PASS,
-        server=config.SERVER,
-        port=config.PORT
-        )
+# initialize LoRa in LORAWAN mode.
+# Please pick the region that matches where you are using the device:
+# Asia = LoRa.AS923
+# Australia = LoRa.AU915
+Europe = LoRa.EU868
+# United States = LoRa.US915
+lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
-    nanogw.start()
-    nanogw._log('Started!')
-    #nanogw._push_data(bytes("[{temperature: 23, time: 12333}]", 'utf-8'))
-    #nanogw._log('You may now press ENTER to enter the REPL')
-    #input()
+# create an OTA authentication params
+# dev_eui = binascii.unhexlify('30AEA4FFFE505654')
+dev_eui = binascii.unhexlify('3AAEA4FFFE505654')
+app_eui = binascii.unhexlify('70B3D57ED000BDA0')
+# app_key = binascii.unhexlify('6D08E6C2C4237B3A1D223404713DF335')
+app_key = binascii.unhexlify('705DFC1AF37D90FB858F510EAFAAAE14')
 
-import otaa_node
+# set the 3 default channels to the same frequency (must be before sending the OTAA join request)
+lora.add_channel(0, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+lora.add_channel(1, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
+lora.add_channel(2, frequency=config.LORA_FREQUENCY, dr_min=0, dr_max=5)
 
-def getTime():
-    return int(utime.time()) * 1000  # Python yo
+# join a network using OTAA
+lora.join(activation=LoRa.OTAA, auth=(dev_eui, app_eui, app_key), timeout=0, dr=config.LORA_NODE_DR)
 
+# wait until the module has joined the network
+while not lora.has_joined():
+    time.sleep(2.5)
+    print('Not joined yet...')
 
-def postTemp(temp, time=None):
-    if time is None:
-        currentTime = getTime()
-    else:
-        currentTime = time
-    print('{"temperature":' + str(temp) + ',"time":' + str(currentTime) + '}')
-    return requests.request('POST', 'https://iot-web-app-2018.herokuapp.com/temperature',
-                            '{"temperature":' + str(temp) + ',"time":' + str(currentTime) + '}', None,
-                            {"Content-Type": "application/json"}).text
+print('Joined')
 
+# remove all the non-default channels
+for i in range(3, 16):
+    lora.remove_channel(i)
 
-def getTemps():
-    return requests.request('GET', 'https://iot-web-app-2018.herokuapp.com/temperature', None,
-                            {"Content-Type": "application/json"}).text
+# create a LoRa socket
+s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
+# set the LoRaWAN data rate
+s.setsockopt(socket.SOL_LORA, socket.SO_DR, config.LORA_NODE_DR)
 
-# temperatures = list()
+# make the socket blocking
+s.setblocking(False)
 
-'''
-while True:
-    thetemp = temperature.get_temperature()
-    #   temperatures.append(thetemp)
-    # print(postTemp(thetemp.temperature))
-    print(thetemp.temperature)
-    time.sleep(1)
-'''
-
-# for cycles in range(10):  # stop after 10 cycles
-#     pycom.rgbled(0x007f00)  # green
-#     time.sleep(5)
-#     pycom.rgbled(0x7f7f00)  # yellow
-#     time.sleep(1.5)
-#     pycom.rgbled(0x7f0000)  # red
-#     time.sleep(4)
-#     print("light")
+s.send('raw string')
