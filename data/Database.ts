@@ -46,7 +46,7 @@ export class Database {
             light: node.light,
             id: node.id
         }).then(function (val) {
-            console.log(val);
+            //console.log(val);
         });
     }
 

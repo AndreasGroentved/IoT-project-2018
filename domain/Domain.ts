@@ -22,6 +22,7 @@ export class Domain {
         const light = json.light;
         const id = json.id;
         const time = json.time;
+        console.log("id " + id);
         //let node:Node = JSON.parse(json);
         const node: Node = new Node(temp, light, time, id);
         console.log(node);
