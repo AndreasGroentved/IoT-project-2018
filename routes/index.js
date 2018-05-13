@@ -9,13 +9,11 @@ new domain.Domain();
 router.get('/', function (req, res, next) {
     domain.Domain.prototype.getAllTemperatures();
     res.sendFile(path.resolve("index.html"));
-    // res.render('index', {title: response});
 });
 
 router.get('/test', function (req, res, next) {
     domain.Domain.prototype.getAllTemperatures();
     res.sendFile(path.resolve("test.html"));
-    // res.render('index', {title: response});
 });
 
 router.get('/temperature', function (req, res, next) {

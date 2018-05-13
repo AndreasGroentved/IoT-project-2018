@@ -56,4 +56,7 @@ def init():
 
 
 def send(data):
-    s.send(data)
+    try:
+        s.send(data)
+    except:
+        print("eoor")

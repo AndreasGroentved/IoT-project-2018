@@ -28,7 +28,9 @@ lightList = []
 timeList = []
 limit = 3  # for testing
 hourDivision = 3600000
+fifteenMinutesDivision = hourDivision / 4
 fiveMinutes = 300000
+oneMinuteDivision = 60000
 
 
 def restoreTempList():
@@ -36,10 +38,12 @@ def restoreTempList():
     global lightList
     global timeList
     lightString = str(sd.getData(sd.light))
+    print(lightString)
     tempString = str(sd.getData(sd.temperature))
     timeString = str(sd.getData(sd.time))
     tempList = tempString.split(",")
     lightList = lightString.split(",")
+    print(str(lightList))
     timeList = timeString.split(",")
 
 
@@ -56,16 +60,20 @@ def updateLists():
     tempList = updateList(tempList, tempValue)
     timeList = updateList(timeList, timeValue)
     saveLists()
-    print(len(lightList))
-    print(limit)
-    if len(lightList) == limit:
-        doUpdate()
+
+    # if len(lightList) == limit:
+    #     doUpdate()
+    doSleep()
 
 
 def updateList(data: list, new: str):
-    data = [new] + data
-    while len(data) > limit:
-        data.pop()
+    if data[0] == '': del data[:]
+    if len(data) > 0:
+        data = [new] + data
+    else:
+        data = [new]
+    # while len(data) > limit:
+    #     data.pop()
     return data
 
 
@@ -76,15 +84,36 @@ def saveLists():
 
 
 def getTime():
-    return int(utime.time() * 1000)  # Python yo
+    return utime.time() * 1000  # Python yo
 
 
-def timeToNextHour(currentTime):
-    return hourDivision / currentTime
+def doSleep(hasSend=False):  # TODO look at optimizing...
+    time = getTime()  # change to hour for real testing
+    timeLongDivision = fiveMinutes  # change to five for real testing
+    timeShortDivision = oneMinuteDivision
+    timePastShortDivision = (time + timeShortDivision) % timeShortDivision
+    timeToNextShortDivision = ((time - timePastShortDivision) + timeShortDivision) - time
+
+    timePastLongDivision = (time + timeLongDivision) % timeLongDivision
+    timeToLongDivision = ((time - timePastLongDivision) + timeLongDivision) - time
+
+    print(int(timeToNextShortDivision))
+    print(int(timeToLongDivision))
+
+    if int(timeToNextShortDivision) != int(timeToLongDivision):
+        sleepForMs(int(timeToNextShortDivision))
+    else:
+        print("equal")
+        if hasSend:
+            sleepForMs(timeToNextShortDivision)  # sleep
+        else:
+            doUpdate()
+            doSleep(True)
 
 
-def getTimeToNextFive():
-    pass
+def sleepForMs(ms: int):
+    print("sleep for " + str(ms))
+    # machine.deepsleep(ms)
 
 
 def updateData():
@@ -94,8 +123,8 @@ def updateData():
     lightList.append(light)
     print(len(lightList))
     print(limit)
-    if len(lightList) == limit:
-        doUpdate()
+    # if len(lightList) == limit:
+    #     doUpdate()
 
 
 def clear():
