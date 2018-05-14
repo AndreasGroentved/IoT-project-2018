@@ -18,14 +18,21 @@ export class Domain {
     }
 
     saveTemperature(json) {
-        const temp = json.temperature;
-        const light = json.light;
-        const id = json.id;
-        const time = json.time;
-        //let node:Node = JSON.parse(json);
-        const node: Node = new Node(temp, light, time, id);
-        console.log(node);
-        dbx.saveTemperature(node);
+        console.log("sup");
+        json = JSON.parse(json);
+        console.log(json.light);
+        for (let i in json.light) {//Assume all arrays have same size or is corrupt
+            console.log("loop");
+            const temp = json.temperature[i];
+            const light = json.light[i];
+            const id = json.id;
+            const time = json.time[i];
+            console.log("id " + id);
+            //let node:Node = JSON.parse(json);
+            const node: Node = new Node(temp, light, time, id);
+            console.log(node);
+            dbx.saveTemperature(node);
+        }
     }
 
 }

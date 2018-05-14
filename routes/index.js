@@ -10,13 +10,11 @@ new domain.Domain();
 router.get('/', function (req, res, next) {
     domain.Domain.prototype.getAllTemperatures();
     res.sendFile(path.resolve("index.html"));
-    // res.render('index', {title: response});
 });
 
 router.get('/test', function (req, res, next) {
     domain.Domain.prototype.getAllTemperatures();
     res.sendFile(path.resolve("test.html"));
-    // res.render('index', {title: response});
 });
 
 router.get('/temperature', function (req, res, next) {
@@ -44,6 +42,13 @@ router.get('/temperature', function (req, res, next) {
 router.post('/temperature', function (req, res, next) {
     console.log(req.body);
     domain.Domain.prototype.saveTemperature(req.body);
+    res.status(200).json('success');
+});
+
+router.post('/lora', function (req, res, next) {
+    var data = req.body.payload_fields;
+    console.log(data.res);
+    domain.Domain.prototype.saveTemperature(data.res);
     res.status(200).json('success');
 });
 
