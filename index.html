@@ -3,47 +3,69 @@
     <head>
         <meta charset="UTF-8">
         <title>IoT</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <style>
+            input[type=date]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                display: none;
+            }
+        </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://code.highcharts.com/highcharts.js"></script>
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
         <script src="https://code.highcharts.com/modules/export-data.js"></script>
         <script>
-            var values = {'temperature': [], 'time': []};
+            var values = { '30AEA44E5F64' : {'time': [], 'temperature': [], 'light': []},
+                           '1' : {'time': [], 'temperature': [], 'light': []}};
             
             $(document).ready(function () {
+                $('#from').val('2018-05-01')
+                $('#to').val((new Date()).toISOString().split('T')[0])
                 getData()
-
             });
 
             function getData() {
+                var from = new Date($('#from')[0].value)
+                var to = new Date($('#to')[0].value)
+                to.setDate(to.getDate() + 1)
                 $.ajax({
-                        url: 'https://iot-web-app-2018.herokuapp.com/temperature',
+                        url: '/temperature',
                         method: 'GET',
-                        dataType: 'json',
+                        data: {
+                            from: Date.parse(from),
+                            to: Date.parse(to)
+                        },
                         success: handleData
                     });
             }
 
             function handleData(result) {
-                $('#data').text(JSON.stringify(result))
+                // $('#data').text(JSON.stringify(result))
+                
+                values = { '30AEA44E5F64' : {'time': [], 'temperature': [], 'light': []},
+                           '1' : {'time': [], 'temperature': [], 'light': []}};
 
                 result.forEach(function (element) {
-                    values.temperature.push(element.temperature)
-                    values.time.push(new Date(element.time).toISOString())
+                    // console.log(element)
+                    if (element.id in values) {
+                        if (element.time) {
+                            values[element.id].time.push(new Date(parseInt(element.time)).toISOString().split('T')[0])
+                            values[element.id].temperature.push(parseFloat(element.temperature))
+                            values[element.id].light.push(parseFloat(element.light))
+                        }
+                    }
                 });
-
-                console.log(values)
                 
-                Highcharts.chart('container', {
+                Highcharts.chart('container1', {
 
                     chart: {
                         type: 'line'
                     },
                     title: {
-                        text: 'We nailed it'
+                        text: 'Device 30AEA44E5F64'
                     },
                     xAxis: {
-                        categories: window.values.time
+                        categories: window.values['30AEA44E5F64'].time
                     },
                     yAxis: {
                         title: {
@@ -60,17 +82,65 @@
                     },
                     series: [{
                         name: 'Temperature',
-                        data: window.values.temperature
-                    }/*, {
+                        data: window.values['30AEA44E5F64'].temperature
+                    }, {
                         name: 'Light',
-                        data: window.values.light
-                    }*/]
+                        data: window.values['30AEA44E5F64'].light
+                    }]
+                });
+
+                Highcharts.chart('container2', {
+
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: 'Device 2'
+                    },
+                    xAxis: {
+                        categories: window.values['1'].time
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Value'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                enabled: true
+                            },
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: 'Temperature',
+                        data: window.values['1'].temperature
+                    }, {
+                        name: 'Light',
+                        data: window.values['1'].light
+                    }]
                 });
             }
         </script>
     </head>
     <body>
-        <div id="data"></div>
-        <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-</body>
+        <div class="container">
+            <h1>IoT 2018</h1>
+            <div class="row">
+                <div class="col-md-4">From:
+                    <input type="date" id="from" required="required"/>
+                </div>
+                <div class="col-md-4">To: 
+                    <input type="date" id="to" required="required"/>
+                </div>
+                <div class="col-md-4">
+                    <button onclick="getData()">Update</button>
+                </div>
+            </div>
+            <div id="data"></div>
+            <div id="container1" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            <div id="container2" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+        </div>
+    </body>
 </html>
