@@ -56,7 +56,8 @@ def init():
 
 
 def send(data):
-    try:
-        s.send(data)
-    except:
-        print("eoor")
+    # try:
+    s.send(data)
+    #     # socket.socket.shutdown(socket.SHUT_RD)
+    # except:
+    #     print("error")

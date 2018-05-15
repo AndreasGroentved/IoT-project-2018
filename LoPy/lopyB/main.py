@@ -26,7 +26,6 @@ pycom.rgbled(0x7f00000)
 tempList = []
 lightList = []
 timeList = []
-limit = 3  # for testing
 hourDivision = 3600000
 fifteenMinutesDivision = hourDivision / 4
 fiveMinutes = 300000
@@ -38,17 +37,14 @@ def restoreTempList():
     global lightList
     global timeList
     lightString = str(sd.getData(sd.light))
-    print(lightString)
     tempString = str(sd.getData(sd.temperature))
     timeString = str(sd.getData(sd.time))
     tempList = tempString.split(",")
     lightList = lightString.split(",")
-    print(str(lightList))
     timeList = timeString.split(",")
 
 
 def updateLists():
-    print("updateLists")
     global lightList
     global tempList
     global timeList
@@ -58,22 +54,27 @@ def updateLists():
     lightValue = (lightValue[0] + lightValue[1]) / 2
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
-    timeList = updateList(timeList, timeValue)
+    timeList = updateTime(timeList, timeValue)
     saveLists()
 
-    # if len(lightList) == limit:
-    #     doUpdate()
     doSleep()
 
 
-def updateList(data: list, new: str):
+def updateList(data: list, new: float):
+    if data[0] == '': del data[:]
+    if len(data) > 0:
+        data = ["%.1f" % round(new, 1)] + data
+    else:
+        data = ["%.1f" % round(new, 1)]
+    return data
+
+
+def updateTime(data: list, new: str):
     if data[0] == '': del data[:]
     if len(data) > 0:
         data = [new] + data
     else:
         data = [new]
-    # while len(data) > limit:
-    #     data.pop()
     return data
 
 
@@ -88,9 +89,9 @@ def getTime():
 
 
 def doSleep(hasSend=False):  # TODO look at optimizing...
-    time = getTime()  # change to hour for real testing
-    timeLongDivision = fiveMinutes  # change to five for real testing
-    timeShortDivision = oneMinuteDivision
+    time = getTime()
+    timeLongDivision = fiveMinutes  # change to hour for real testing
+    timeShortDivision = oneMinuteDivision  # change to five for real testing
     timePastShortDivision = (time + timeShortDivision) % timeShortDivision
     timeToNextShortDivision = ((time - timePastShortDivision) + timeShortDivision) - time
 
@@ -113,18 +114,7 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
 
 def sleepForMs(ms: int):
     print("sleep for " + str(ms))
-    # machine.deepsleep(ms)
-
-
-def updateData():
-    temp = sensor.temp
-    light = sensor.light
-    tempList.append(temp)
-    lightList.append(light)
-    print(len(lightList))
-    print(limit)
-    # if len(lightList) == limit:
-    #     doUpdate()
+    machine.deepsleep(ms)
 
 
 def clear():
@@ -142,19 +132,23 @@ def doUpdate():
 def buildString():
     lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
     tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
-    timeString = '[' + ', '.join('"{0}"'.format(w) for w in timeList) + ']'
+    timeString = '[' + ', '.join('"{0}"'.format(str(int(int(w) / 1000))) for w in timeList) + ']'  # look at type
     print(lightString)
-    return "{\"id\":\"" + getId() + "\",\"time\":" + lightString + ",\"temperature\":" + tempString + ", \"light\":" + timeString + "}"
+    ret = "{\"i\":\"" + getId() + "\",\"t\":" + timeString + ",\"c\":" + tempString + ", \"l\":" + lightString + "}"
+    print(ret)
+    return ret
 
 
 def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
 def sendToServer(dataString):
-    print("init")
     print(dataString)
     lora.init()
     lora.send(dataString)
+
+
+# def sendLoraToLora(dataString):
 
 
 def initOperations():
@@ -176,7 +170,7 @@ btn = machine.Pin('P14', mode=machine.Pin.IN, pull=machine.Pin.PULL_UP)
 
 def long_press_handler(alarm):
     print("****** LONG PRESS HANDLER ******")
-    machine.deepsleep(1)
+    sendToServer(buildString())
 
 
 def single_press_handler():
