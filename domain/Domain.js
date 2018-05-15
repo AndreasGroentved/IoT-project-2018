@@ -13,6 +13,9 @@ class Domain {
     getAllTemperatures() {
         return dbx.getAllTemperatures();
     }
+    getTemperatures(from, to) {
+        return dbx.getTemperatures(from, to);
+    }
     saveTemperature(json) {
         console.log("sup");
         json = JSON.parse(json);
