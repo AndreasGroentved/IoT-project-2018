@@ -9,6 +9,7 @@ from machine import Timer
 from network import Bluetooth
 
 import bluetoothA
+import sd
 import sensor
 
 # TODO synkronize every hour, for demo use button
@@ -37,9 +38,9 @@ def restoreTempList():
     global tempList
     global lightList
     global timeList
-    lightString = ""  # str(sd.getData(sd.light))
-    tempString = ""  # str(sd.getData(sd.temperature))
-    timeString = ""  # str(sd.getData(sd.time))
+    lightString = str(sd.getData(sd.light))
+    tempString = str(sd.getData(sd.temperature))
+    timeString = str(sd.getData(sd.time))
     tempList = tempString.split(",")
     lightList = lightString.split(",")
     timeList = timeString.split(",")
@@ -58,7 +59,7 @@ def updateLists():
     tempList = updateList(tempList, tempValue)
     timeList = updateTime(timeList, timeValue)
     saveLists()
-
+    doUpdate()
     doSleep()
 
 
@@ -81,9 +82,9 @@ def updateTime(data: list, new: str):
 
 
 def saveLists():
-    # sd.save(','.join(map(str, lightList)), sd.light)
-    # sd.save(','.join(map(str, tempList)), sd.temperature)
-    # sd.save(','.join(map(str, timeList)), sd.time)
+    sd.save(','.join(map(str, lightList)), sd.light)
+    sd.save(','.join(map(str, tempList)), sd.temperature)
+    sd.save(','.join(map(str, timeList)), sd.time)
     pass
 
 
@@ -104,7 +105,6 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
     print(int(timeToNextShortDivision))
     print(int(timeToLongDivision))
 
-    doUpdate()
     sleepForMs(timeToNextShortDivision)
 
     # if int(timeToNextShortDivision) != int(timeToLongDivision):
@@ -120,6 +120,7 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
 
 def sleepForMs(ms: int):
     print("sleep for " + str(ms))
+    machine.deepsleep(ms)
 
 
 def clear():
@@ -129,7 +130,6 @@ def clear():
 
 
 def doUpdate():
-    sendToServer(buildString())
     clear()
     saveLists()
 
