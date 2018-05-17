@@ -106,9 +106,11 @@
             }
 
             function analize(suffix, deviceId) {
+                $('#stats' + suffix).empty()
+
                 var tempJstat = jStat(values[deviceId].temperature)
                 var lightJstat = jStat(values[deviceId].light)
-                
+
                 tempJstat.mean(mean => {
                     var divRow = $('<div class="row"></div>')
                     divRow.append($('<div class="col-md-3">Mean temperature:</div>'))
