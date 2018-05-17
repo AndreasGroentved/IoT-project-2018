@@ -37,6 +37,28 @@ export class Database {
         });
     }
 
+    getTemperatures(from, to) {
+        return new Promise((resolve) => {
+            console.log("getTemperatures between " + from + " and " + to);
+            firebase.database().ref('/Temperatures/').once('value')
+                .then((snapshot) => {
+                    let nodes = [];
+                    snapshot.forEach((doc) => {
+                        if (doc.val().temperature != null && (doc.val().time != null && doc.val().time > from && doc.val().time < to)) {
+                            let tempNode = new Node(doc.val().temperature, doc.val().light, doc.val().time, doc.val().id);
+                            // console.log(tempNode);
+                            nodes.push(tempNode);
+                        }
+                    });
+                    // console.log(nodes);
+                    resolve(nodes);
+                })
+                .catch((err) => {
+                    console.log('Error getting documents', err);
+                });
+        });
+    }
+
 
     saveTemperature(node: Node) {
         console.log("save");

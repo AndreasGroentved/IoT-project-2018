@@ -8,8 +8,7 @@ from machine import Pin
 from machine import Timer
 from network import Bluetooth
 
-import lora
-import sd
+import bluetoothA
 import sensor
 
 # TODO synkronize every hour, for demo use button
@@ -38,9 +37,9 @@ def restoreTempList():
     global tempList
     global lightList
     global timeList
-    lightString = str(sd.getData(sd.light))
-    tempString = str(sd.getData(sd.temperature))
-    timeString = str(sd.getData(sd.time))
+    lightString = ""  # str(sd.getData(sd.light))
+    tempString = ""  # str(sd.getData(sd.temperature))
+    timeString = ""  # str(sd.getData(sd.time))
     tempList = tempString.split(",")
     lightList = lightString.split(",")
     timeList = timeString.split(",")
@@ -53,6 +52,7 @@ def updateLists():
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
     timeValue = str(getTime())
+    print(lightValue)
     lightValue = (lightValue[0] + lightValue[1]) / 2  # TODO fast solution -> find better
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
@@ -81,9 +81,10 @@ def updateTime(data: list, new: str):
 
 
 def saveLists():
-    sd.save(','.join(map(str, lightList)), sd.light)
-    sd.save(','.join(map(str, tempList)), sd.temperature)
-    sd.save(','.join(map(str, timeList)), sd.time)
+    # sd.save(','.join(map(str, lightList)), sd.light)
+    # sd.save(','.join(map(str, tempList)), sd.temperature)
+    # sd.save(','.join(map(str, timeList)), sd.time)
+    pass
 
 
 def getTime():
@@ -119,7 +120,6 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
 
 def sleepForMs(ms: int):
     print("sleep for " + str(ms))
-    machine.deepsleep(ms)
 
 
 def clear():
@@ -156,8 +156,9 @@ def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace(
 
 def sendToServer(dataString):
     print(dataString)
-    lora.init()
-    lora.send(dataString)
+    bluetoothA.startSending(buildString())
+    # lora.init()
+    # lora.send(dataString)
 
 
 def sendOverBlueTooth(dataString):
@@ -168,7 +169,7 @@ def sendOverBlueTooth(dataString):
 
 
 def initOperations():
-    sd.init()
+    # sd.init()
     restoreTempList()
     updateLists()
 

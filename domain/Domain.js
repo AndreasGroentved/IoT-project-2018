@@ -10,6 +10,9 @@ class Domain {
     test() {
         return "nailed it";
     }
+    getTemperatures(from, to) {
+        return dbx.getTemperatures(from, to);
+    }
     getAllTemperatures() {
         return dbx.getAllTemperatures();
     }

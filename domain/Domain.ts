@@ -13,6 +13,10 @@ export class Domain {
         return "nailed it";
     }
 
+    getTemperatures(from, to) {
+        return dbx.getTemperatures(from, to);
+    }
+
     getAllTemperatures(): Promise<Node[]> {
         return dbx.getAllTemperatures();
     }
