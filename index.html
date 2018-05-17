@@ -11,12 +11,17 @@
             }
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.7.1/jstat.js"></script>
         <script src="https://code.highcharts.com/highcharts.js"></script>
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
         <script src="https://code.highcharts.com/modules/export-data.js"></script>
         <script>
-            var values = { '30AEA44E5F64' : {'time': [], 'temperature': [], 'light': []},
-                           '1' : {'time': [], 'temperature': [], 'light': []}};
+            const deviceId1 = '30AEA44E5F64'
+            const deviceId2 = '1'
+
+            var values = {};
+            values[deviceId1] = {'time': [], 'temperature': [], 'light': []}
+            values[deviceId2] = {'time': [], 'temperature': [], 'light': []}
             
             $(document).ready(function () {
                 $('#from').val('2018-05-01')
@@ -40,87 +45,132 @@
             }
 
             function handleData(result) {
-                // $('#data').text(JSON.stringify(result))
-                
-                values = { '30AEA44E5F64' : {'time': [], 'temperature': [], 'light': []},
-                           '1' : {'time': [], 'temperature': [], 'light': []}};
+                        
+                values[deviceId1] = {'time': [], 'temperature': [], 'light': []}
+                values[deviceId2] = {'time': [], 'temperature': [], 'light': []}
 
                 result.forEach(function (element) {
                     // console.log(element)
                     if (element.id in values) {
                         if (element.time) {
-                            values[element.id].time.push(new Date(parseInt(element.time)).toISOString().split('T')[0])
+                            values[element.id].time.push(new Date(parseInt(element.time)).toISOString())
                             values[element.id].temperature.push(parseFloat(element.temperature))
                             values[element.id].light.push(parseFloat(element.light))
                         }
                     }
                 });
+
+                drawChart('1', deviceId1)
+                drawChart('2', deviceId2)
+
+                analize('1', deviceId1)
+                analize('2', deviceId2)
+            }
+
+            function drawChart(suffix, deviceId) {
+
+                console.log(window.values[deviceId])
+
+                Highcharts.chart('container' + suffix, {
+
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: 'Device ' + deviceId
+                    },
+                    xAxis: {
+                        categories: window.values[deviceId].time
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Value'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                enabled: true
+                            },
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: 'Temperature',
+                        data: window.values[deviceId].temperature
+                    }, {
+                        name: 'Light',
+                        data: window.values[deviceId].light
+                    }]
+                });
+            }
+
+            function analize(suffix, deviceId) {
+                var tempJstat = jStat(values[deviceId].temperature)
+                var lightJstat = jStat(values[deviceId].light)
                 
-                Highcharts.chart('container1', {
+                tempJstat.mean(mean => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Mean temperature:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(mean))
+                    $('#stats' + suffix).append(divRow)
+                }).median(median => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Median temperature:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(median))
+                    $('#stats' + suffix).append(divRow)
+                }).min(min => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Minimum temperature:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(min))
+                    divRow.append($('<div class="col-md-3"></div>').text(values[deviceId].time[values[deviceId].temperature.indexOf(min)]))
+                    $('#stats' + suffix).append(divRow)
+                }).max(max => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Maximum temperature:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(max))
+                    divRow.append($('<div class="col-md-3"></div>').text(values[deviceId].time[values[deviceId].temperature.indexOf(max)]))
+                    $('#stats' + suffix).append(divRow)
+                }).diff(diff => {
+                    var maxDiff = jStat(diff).max()
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Highest increase:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(maxDiff))
+                    divRow.append($('<div class="col-md-3"></div>').text(values[deviceId].time[values[diff.indexOf(maxDiff)]]))
+                    $('#stats' + suffix).append(divRow)
+                })
 
-                    chart: {
-                        type: 'line'
-                    },
-                    title: {
-                        text: 'Device 30AEA44E5F64'
-                    },
-                    xAxis: {
-                        categories: window.values['30AEA44E5F64'].time
-                    },
-                    yAxis: {
-                        title: {
-                            text: 'Value'
-                        }
-                    },
-                    plotOptions: {
-                        line: {
-                            dataLabels: {
-                                enabled: true
-                            },
-                            enableMouseTracking: false
-                        }
-                    },
-                    series: [{
-                        name: 'Temperature',
-                        data: window.values['30AEA44E5F64'].temperature
-                    }, {
-                        name: 'Light',
-                        data: window.values['30AEA44E5F64'].light
-                    }]
-                });
-
-                Highcharts.chart('container2', {
-
-                    chart: {
-                        type: 'line'
-                    },
-                    title: {
-                        text: 'Device 2'
-                    },
-                    xAxis: {
-                        categories: window.values['1'].time
-                    },
-                    yAxis: {
-                        title: {
-                            text: 'Value'
-                        }
-                    },
-                    plotOptions: {
-                        line: {
-                            dataLabels: {
-                                enabled: true
-                            },
-                            enableMouseTracking: false
-                        }
-                    },
-                    series: [{
-                        name: 'Temperature',
-                        data: window.values['1'].temperature
-                    }, {
-                        name: 'Light',
-                        data: window.values['1'].light
-                    }]
-                });
+                lightJstat.mean(mean => {
+                    $('#stats' + suffix).append($('</br>'))
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Mean light:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(mean))
+                    $('#stats' + suffix).append(divRow)
+                }).median(median => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Median light:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(median))
+                    $('#stats' + suffix).append(divRow)
+                }).min(min => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Minimum light:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(min))
+                    divRow.append($('<div class="col-md-3"></div>').text(values[deviceId].time[values[deviceId].light.indexOf(min)]))
+                    $('#stats' + suffix).append(divRow)
+                }).max(max => {
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Maximum light:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(max))
+                    divRow.append($('<div class="col-md-3"></div>').text(values[deviceId].time[values[deviceId].light.indexOf(max)]))
+                    $('#stats' + suffix).append(divRow)
+                }).diff(diff => {
+                    var maxDiff = jStat(diff).max()
+                    var divRow = $('<div class="row"></div>')
+                    divRow.append($('<div class="col-md-3">Highest increase:</div>'))
+                    divRow.append($('<div class="col-md-3"></div>').text(maxDiff))
+                    divRow.append($('<div class="col-md-3"></div>').text(values[deviceId].time[values[diff.indexOf(maxDiff)]]))
+                    $('#stats' + suffix).append(divRow)
+                })
             }
         </script>
     </head>
@@ -138,9 +188,10 @@
                     <button onclick="getData()">Update</button>
                 </div>
             </div>
-            <div id="data"></div>
             <div id="container1" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            <div id="stats1"></div>
             <div id="container2" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            <div id="stats2"></div>
         </div>
     </body>
 </html>
