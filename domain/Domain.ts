@@ -19,11 +19,16 @@ export class Domain {
 
     saveTemperature(json) {
         console.log("sup");
-        json = JSON.parse(json);
+        console.log("woot");
+        console.log(json);
+       // json = json.substring(1, json.length - 1);
+
+       // json = JSON.parse(json);
+        console.log(json);
         console.log(json.light);
         for (let i in json.light) {//Assume all arrays have same size or is corrupt
             console.log("loop");
-            const temp = json.temperature[i];
+            const temp = json.temp[i];
             const light = json.light[i];
             const id = json.id;
             const time = json.time[i];

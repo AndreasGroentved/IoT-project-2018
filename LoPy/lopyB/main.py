@@ -6,6 +6,7 @@ import ubinascii
 import utime
 from machine import Pin
 from machine import Timer
+from network import Bluetooth
 
 import lora
 import sd
@@ -27,9 +28,10 @@ tempList = []
 lightList = []
 timeList = []
 hourDivision = 3600000
-fifteenMinutesDivision = hourDivision / 4
+fifteenMinutesDivision = 900000
 fiveMinutes = 300000
 oneMinuteDivision = 60000
+bluetoothReceiver = "SOMEMACADDRESS"  # TODO find mac adress
 
 
 def restoreTempList():
@@ -51,7 +53,7 @@ def updateLists():
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
     timeValue = str(getTime())
-    lightValue = (lightValue[0] + lightValue[1]) / 2
+    lightValue = (lightValue[0] + lightValue[1]) / 2  # TODO fast solution -> find better
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
     timeList = updateTime(timeList, timeValue)
@@ -101,15 +103,18 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
     print(int(timeToNextShortDivision))
     print(int(timeToLongDivision))
 
-    if int(timeToNextShortDivision) != int(timeToLongDivision):
-        sleepForMs(int(timeToNextShortDivision))
-    else:
-        print("equal")
-        if hasSend:
-            sleepForMs(timeToNextShortDivision)  # sleep
-        else:
-            doUpdate()
-            doSleep(True)
+    doUpdate()
+    sleepForMs(timeToNextShortDivision)
+
+    # if int(timeToNextShortDivision) != int(timeToLongDivision):
+    #     sleepForMs(int(timeToNextShortDivision))
+    # else:
+    #     print("equal")
+    #     if hasSend:
+    #         sleepForMs(timeToNextShortDivision)  # sleep
+    #     else:
+    #         doUpdate()
+    #         doSleep(True)
 
 
 def sleepForMs(ms: int):
@@ -130,11 +135,18 @@ def doUpdate():
 
 
 def buildString():
-    lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
-    tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
-    timeString = '[' + ', '.join('"{0}"'.format(str(int(int(w) / 1000))) for w in timeList) + ']'  # look at type
-    print(lightString)
-    ret = "{\"i\":\"" + getId() + "\",\"t\":" + timeString + ",\"c\":" + tempString + ", \"l\":" + lightString + "}"
+    # lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
+    # tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
+    # timeString = '[' + ', '.join(
+    #     '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList) + ']'  # look at type
+    lightString = ', '.join('"{0}"'.format(w) for w in lightList)
+    tempString = ', '.join('"{0}"'.format(w) for w in tempList)
+    timeString = ', '.join(
+        '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
+    # print(lightString)
+    # ret = "{\"i\":\"" + getId() + "\",\"t\":" + timeString + ",\"c\":" + tempString + ", \"l\":" + lightString + "}"
+    ret = "b" + ":" + lightString + ":" + tempString + ":" + timeString
+
     print(ret)
     return ret
 
@@ -148,7 +160,11 @@ def sendToServer(dataString):
     lora.send(dataString)
 
 
-# def sendLoraToLora(dataString):
+def sendOverBlueTooth(dataString):
+    bt = Bluetooth()
+    bt.connect(bluetoothReceiver)
+    bt.send("yolo")
+    bt.close()
 
 
 def initOperations():

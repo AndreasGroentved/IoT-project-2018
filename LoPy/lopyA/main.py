@@ -1,19 +1,20 @@
 import gc
-import socket
 
 import machine
 import pycom
+import ubinascii
 import utime
 from machine import Pin
 from machine import Timer
-from network import LoRa
+from network import Bluetooth
 
+import blue
+import lora
 import sd
 import sensor
 
 # TODO synkronize every hour, for demo use button
-# TODO save data
-# TODO retrieve data
+# TODO possible time problem
 # TODO send data lora
 # TODO Format data to send
 # TODO format data to save
@@ -27,9 +28,10 @@ pycom.rgbled(0x7f00000)
 tempList = []
 lightList = []
 timeList = []
-limit = 5  # for testing
 hourDivision = 3600000
+fifteenMinutesDivision = 900000
 fiveMinutes = 300000
+oneMinuteDivision = 60000
 
 
 def restoreTempList():
@@ -47,18 +49,34 @@ def restoreTempList():
 def updateLists():
     global lightList
     global tempList
+    global timeList
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
-    lightValue = (lightValue[0] + lightValue[1])
+    timeValue = str(getTime())
+    lightValue = (lightValue[0] + lightValue[1]) / 2  # TODO fast solution -> find better
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
+    timeList = updateTime(timeList, timeValue)
     saveLists()
 
+    doSleep()
 
-def updateList(data: list, new: str):
-    data = [new] + data
-    while len(data) > limit:
-        data.pop()
+
+def updateList(data: list, new: float):
+    if data[0] == '': del data[:]
+    if len(data) > 0:
+        data = ["%.1f" % round(new, 1)] + data
+    else:
+        data = ["%.1f" % round(new, 1)]
+    return data
+
+
+def updateTime(data: list, new: str):
+    if data[0] == '': del data[:]
+    if len(data) > 0:
+        data = [new] + data
+    else:
+        data = [new]
     return data
 
 
@@ -69,46 +87,85 @@ def saveLists():
 
 
 def getTime():
-    return int(utime.time() * 1000)  # Python yo
+    return utime.time() * 1000  # Python yo
 
 
-def timeToNextHour(currentTime):
-    return hourDivision / currentTime
+def doSleep(hasSend=False):  # TODO look at optimizing...
+    time = getTime()
+    timeLongDivision = fiveMinutes  # change to hour for real testing
+    timeShortDivision = oneMinuteDivision  # change to five for real testing
+    timePastShortDivision = (time + timeShortDivision) % timeShortDivision
+    timeToNextShortDivision = ((time - timePastShortDivision) + timeShortDivision) - time
+
+    timePastLongDivision = (time + timeLongDivision) % timeLongDivision
+    timeToLongDivision = ((time - timePastLongDivision) + timeLongDivision) - time
+
+    print(int(timeToNextShortDivision))
+    print(int(timeToLongDivision))
+
+    if int(timeToNextShortDivision) != int(timeToLongDivision):
+        sleepForMs(int(timeToNextShortDivision))
+    else:
+        print("equal")
+        if hasSend:
+            sleepForMs(timeToNextShortDivision)  # sleep
+        else:
+            doUpdate()
+            doSleep(True)
 
 
-def getTimeToNextFive():
-    pass
+def sleepForMs(ms: int):
+    print("sleep for " + str(ms))
+    machine.deepsleep(ms)
 
 
-def updateData():
-    temp = sensor.temp
-    light = sensor.light
-    tempList.append(temp)
-    lightList.append(light)
-
-    # machine.deepsleep(5000)
+def clear():
+    del tempList[:]
+    del timeList[:]
+    del lightList[:]
 
 
 def doUpdate():
-    sendLora(buildString())
+    sendToServer(buildString())
+    clear()
+    saveLists()
 
 
 def buildString():
     lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
     tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
-    timeString = '[' + ', '.join('"{0}"'.format(w) for w in timeList) + ']'
-    return "{'id':'" + getId() + "','time':[" + lightString + "],'temperature':[" + tempString + "], 'light':[" + timeString + "]}"
+    timeString = '[' + ', '.join('"{0}"'.format(str(int(int(w) / 1000))) for w in timeList) + ']'  # look at type
+    print(lightString)
+    ret = "{\"i\":\"" + getId() + "\",\"t\":" + timeString + ",\"c\":" + tempString + ", \"l\":" + lightString + "}"
+    print(ret)
+    return ret
 
 
-def getId(): return machine.unique_id()
+def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
-def sendLora(dataString):
-    lora = LoRa(mode=LoRa.LORA, region=LoRa.EU868)
-    s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
-    s.setblocking(False)
-    s.send(dataString)
+def sendToServer(dataString):
+    print(dataString)
+    lora.init()
+    lora.send(dataString)
 
+
+def receiveOverBlueTooth(dataString):
+    blue.init(bluetoothHandler)
+
+
+def bluetoothHandler(bt):
+    events = bt.events()  # this method returns the flags and clears the internal registry
+    if events & Bluetooth.CLIENT_CONNECTED:
+
+
+    elif events & Bluetooth.CLIENT_DISCONNECTED:
+        print("Client disconnected")
+
+
+def mergeData(otherData):
+
+    pass
 
 def initOperations():
     sd.init()
@@ -129,7 +186,7 @@ btn = machine.Pin('P14', mode=machine.Pin.IN, pull=machine.Pin.PULL_UP)
 
 def long_press_handler(alarm):
     print("****** LONG PRESS HANDLER ******")
-    machine.deepsleep(1)
+    sendToServer(buildString())
 
 
 def single_press_handler():

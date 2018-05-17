@@ -57,7 +57,9 @@ def init():
 
 def send(data):
     # try:
-    s.send(data)
+    print("sending, yo")
+    print(data)
+    s.send(bytes(data, 'utf-8'))
     #     # socket.socket.shutdown(socket.SHUT_RD)
     # except:
     #     print("error")
