@@ -8,6 +8,7 @@ const config = {
     databaseURL: "https://iot-project-5e6fb.firebaseio.com",
     storageBucket: "iot-project-5e6fb.appspot.com",
 };
+
 firebase.initializeApp(config);
 
 export class Database {

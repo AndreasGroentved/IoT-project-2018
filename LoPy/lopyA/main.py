@@ -4,14 +4,15 @@ import machine
 import pycom
 import ubinascii
 import utime
-import lora
 from machine import Pin
 from machine import Timer
-from network import Bluetooth
 
 import bluetooth
+import lora
+import requests
 import sd
 import sensor
+import wifi
 
 # TODO synkronize every hour, for demo use button
 # TODO possible time problem
@@ -39,9 +40,9 @@ def restoreTempList():
     global tempList
     global lightList
     global timeList
-    lightString = ''#str(sd.getData(sd.light))
-    tempString = ''#str(sd.getData(sd.temperature))
-    timeString = ''#str(sd.getData(sd.time))
+    lightString = ''  # str(sd.getData(sd.light))
+    tempString = ''  # str(sd.getData(sd.temperature))
+    timeString = ''  # str(sd.getData(sd.time))
     tempList = tempString.split(",")
     lightList = lightString.split(",")
     timeList = timeString.split(",")
@@ -83,9 +84,9 @@ def updateTime(data: list, new: str):
 
 
 def saveLists():
-    #sd.save(','.join(map(str, lightList)), sd.light)
-    #sd.save(','.join(map(str, tempList)), sd.temperature)
-    #sd.save(','.join(map(str, timeList)), sd.time)
+    # sd.save(','.join(map(str, lightList)), sd.light)
+    # sd.save(','.join(map(str, tempList)), sd.temperature)
+    # sd.save(','.join(map(str, timeList)), sd.time)
     pass
 
 
@@ -108,20 +109,44 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
 
     sleepForMs(timeToNextShortDivision)
 
-    # if int(timeToNextShortDivision) != int(timeToLongDivision):
-    #     sleepForMs(int(timeToNextShortDivision))
-    # else:
-    #     print("equal")
-    #     if hasSend:
-    #         sleepForMs(timeToNextShortDivision)  # sleep
-    #     else:
-    #         doUpdate()
-    #         doSleep(True)
-
 
 def sleepForMs(ms: int):
     print("sleep for " + str(ms))
     machine.deepsleep(ms)
+
+
+def sendOverWifi(dataStringList: list):
+    print(str(dataStringList))
+    print(constructDataString(dataStringList))
+    json = buildJSON(constructDataString(dataStringList))
+    print(json)
+    wifi.init()
+
+    requests.request('POST', 'https://iot-web-app-2018.herokuapp.com/temperature', json, None,
+                     {"Content-Type": "application/json"})
+
+
+def buildJSON(data):
+    arr = data.split(":")
+    out = "{\"id\":" + arr[0] + ","
+    out += "\"light\":[" + arr[1] + "],"
+    out += "\"temp\":[" + arr[2] + "],"
+    out += "\"time\":" + buildTimeJson(arr[3])
+    out += "}"
+    out = out.replace("'", "\"")
+    print(out)
+    return out
+
+
+def buildTimeJson(string):
+    w = str(string)
+    if "," in w:
+        arr = w.split(",")
+        print(str(arr))
+        return '[' + ', '.join(
+            '"{0}"'.format(str("152") + str(q).replace("'", "").replace("\"", "") + str("000")) for q in arr) + ']'
+    else:
+        return "[" + "\"152" + str(string).replace("'", "") + "000" + "\"]"
 
 
 def clear():
@@ -131,48 +156,88 @@ def clear():
 
 
 def doUpdate():
-    sendToServer(buildString())
+    # sendToServerLora(buildString())
     clear()
     saveLists()
 
 
 def buildString():
-    # lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
-    # tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
-    # timeString = '[' + ', '.join(
-    #     '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList) + ']'  # look at type
-    lightString = ', '.join('"{0}"'.format(w) for w in lightList)
+    lightString = ', '.join('"{0}"'.format(getNull(w)) for w in lightList)
     tempString = ', '.join('"{0}"'.format(w) for w in tempList)
-    timeString = ', '.join('"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
-    # print(lightString)
-    # ret = "{\"i\":\"" + getId() + "\",\"t\":" + timeString + ",\"c\":" + tempString + ", \"l\":" + lightString + "}"
-    ret = "a" + ":" + lightString + ":" + tempString + ":" + timeString
+    timeString = ', '.join(
+        '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
+    ret = "b" + ":" + lightString + ":" + tempString + ":" + timeString
 
     print(ret)
     return ret
 
 
+def getNull(data):
+    if str(data) == "" or str(data) == " ":
+        return "0"
+    else:
+        return str(data)
+
+
 def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
-def sendToServer(dataString):
-    print(dataString)
-    lora.send(dataString)
+def constructDataString(data):
+    print(len(data))
+    lengthOtType = int(int(len(data) + 1) / 4)
+    print(str(lengthOtType))
+    # Todo hardcoded id - nono
+    idString = "b"
+    index = 0
+    lightString = ','.join('"{0}"'.format(w) for w in data[index:lengthOtType])
+    index += lengthOtType
+    tempString = ','.join('"{0}"'.format(str(w)) for w in data[index:lengthOtType + index])
+    index += lengthOtType
+    timeString = ','.join('"{0}"'.format(w) for w in data[index:lengthOtType + index])
+    return idString + ":" + tempString + ":" + lightString + ":" + timeString
+
+
+def sendToServerLora(dataString):
+    print(str(dataString))
+    data = constructDataString(dataString)
+    lora.init()
+    lora.send(data)
+
+
+# def sendWifi(data: list):
+
 
 def checkBluetooth():
     try:
-        value = bluetooth.scan()
-        if value and len(value) > 0:
-            sendToServer(':'.join([value['id'],value['li'],value['te'],value['ti']]))
+        value = bluetooth.scan(15)
+        print("value " + str(value))
+        print("len " + str(len(value)))
+        if not value:
+            return
+        wifi = shouldUseWifi(value)
+        if wifi:
+            print("wifi")
+            sendOverWifi(value)
+        else:
+            print("lora")
+            sendToServerLora(value)
+        # if value and len(value) > 0:
+        #   sendToServer(':'.join([value['id'], value['li'], value['te'], value['ti']]))
     except Exception as e:
-            print("Error " + str(e))
+        print("Error " + str(e))
+    doSleep(True)
+
+
+def shouldUseWifi(data: list): return len(data) > 4
+
 
 def initOperations():
-    # sd.init()
-    lora.init()
+    sd.init()
+    # lora.init()
     restoreTempList()
     checkBluetooth()
     updateLists()
+
 
 initOperations()
 
@@ -187,7 +252,7 @@ btn = machine.Pin('P14', mode=machine.Pin.IN, pull=machine.Pin.PULL_UP)
 
 def long_press_handler(alarm):
     print("****** LONG PRESS HANDLER ******")
-    sendToServer(buildString())
+    # sendToServerLora(buildString())
 
 
 def single_press_handler():

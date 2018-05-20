@@ -6,9 +6,8 @@ import ubinascii
 import utime
 from machine import Pin
 from machine import Timer
-from network import Bluetooth
 
-import bluetoothA
+import bluetooth
 import sd
 import sensor
 
@@ -53,14 +52,21 @@ def updateLists():
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
     timeValue = str(getTime())
-    print(lightValue)
     lightValue = (lightValue[0] + lightValue[1]) / 2  # TODO fast solution -> find better
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
     timeList = updateTime(timeList, timeValue)
     saveLists()
-    doUpdate()
-    doSleep()
+    # doUpdate()
+    # sendToServer(buildString())
+    assessSituation()
+
+
+def assessSituation():
+    if float(tempList[-1]) > float(30):
+        doUpdate(lightList[-1], tempList[-1], timeList[-1], False)
+    else:
+        doSleep()
 
 
 def updateList(data: list, new: float):
@@ -85,7 +91,6 @@ def saveLists():
     sd.save(','.join(map(str, lightList)), sd.light)
     sd.save(','.join(map(str, tempList)), sd.temperature)
     sd.save(','.join(map(str, timeList)), sd.time)
-    pass
 
 
 def getTime():
@@ -105,17 +110,16 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
     print(int(timeToNextShortDivision))
     print(int(timeToLongDivision))
 
-    sleepForMs(timeToNextShortDivision)
-
-    # if int(timeToNextShortDivision) != int(timeToLongDivision):
-    #     sleepForMs(int(timeToNextShortDivision))
-    # else:
-    #     print("equal")
-    #     if hasSend:
-    #         sleepForMs(timeToNextShortDivision)  # sleep
-    #     else:
-    #         doUpdate()
-    #         doSleep(True)
+    if int(timeToNextShortDivision) != int(timeToLongDivision):
+        sleepForMs(int(timeToNextShortDivision))
+    else:
+        print("equal")
+        if hasSend:
+            sleepForMs(timeToNextShortDivision)  # sleep
+        else:
+            doUpdate(lightList, tempList, timeList, True)
+            # clear()
+            # doSleep(True)
 
 
 def sleepForMs(ms: int):
@@ -127,49 +131,49 @@ def clear():
     del tempList[:]
     del timeList[:]
     del lightList[:]
-
-
-def doUpdate():
-    clear()
     saveLists()
 
 
-def buildString():
-    # lightString = '[' + ', '.join('"{0}"'.format(w) for w in lightList) + ']'
-    # tempString = '[' + ', '.join('"{0}"'.format(w) for w in tempList) + ']'
-    # timeString = '[' + ', '.join(
-    #     '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList) + ']'  # look at type
-    lightString = ', '.join('"{0}"'.format(w) for w in lightList)
-    tempString = ', '.join('"{0}"'.format(w) for w in tempList)
+def doUpdate(lightList, tempList, timeList, clear):
+    sendToServer(buildString(lightList, tempList, timeList), clear)
+
+
+def buildString(lightList, tempList, timeList):
+    lightString = ', '.join("{0}".format(getNull(w)) for w in lightList)
+    tempString = ', '.join("{0}".format(w) for w in tempList)
     timeString = ', '.join(
-        '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
-    # print(lightString)
-    # ret = "{\"i\":\"" + getId() + "\",\"t\":" + timeString + ",\"c\":" + tempString + ", \"l\":" + lightString + "}"
+        "{0}".format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
     ret = "b" + ":" + lightString + ":" + tempString + ":" + timeString
 
     print(ret)
     return ret
 
 
+def getNull(data):
+    if str(data) == "" or str(data) == " ":
+        return "0"
+    else:
+        return str(data)
+
+
 def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
-def sendToServer(dataString):
+def sendToServer(dataString, clear):
     print(dataString)
-    bluetoothA.startSending(buildString())
+    toSend = bluetooth.startSending([tempList, lightList, timeList, ["b"]], afterBLEUpdate, clear)
     # lora.init()
     # lora.send(dataString)
 
 
-def sendOverBlueTooth(dataString):
-    bt = Bluetooth()
-    bt.connect(bluetoothReceiver)
-    bt.send("yolo")
-    bt.close()
+def afterBLEUpdate(clearrr):
+    print("after")
+    if clearrr: clear()
+    doSleep(True)
 
 
 def initOperations():
-    # sd.init()
+    sd.init()
     restoreTempList()
     updateLists()
 
@@ -187,7 +191,7 @@ btn = machine.Pin('P14', mode=machine.Pin.IN, pull=machine.Pin.PULL_UP)
 
 def long_press_handler(alarm):
     print("****** LONG PRESS HANDLER ******")
-    sendToServer(buildString())
+    # sendToServer(buildString())
 
 
 def single_press_handler():
