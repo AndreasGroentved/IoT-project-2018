@@ -142,7 +142,7 @@ def buildString(lightList, tempList, timeList):
     lightString = ', '.join("{0}".format(getNull(w)) for w in lightList)
     tempString = ', '.join("{0}".format(w) for w in tempList)
     timeString = ', '.join(
-        "{0}".format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
+        "{0}".format(str(w)[3:-3]) for w in timeList)  # look at type
     ret = "b" + ":" + lightString + ":" + tempString + ":" + timeString
 
     print(ret)

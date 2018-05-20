@@ -144,9 +144,9 @@ def buildTimeJson(string):
         arr = w.split(",")
         print(str(arr))
         return '[' + ', '.join(
-            '"{0}"'.format(str("152") + str(q).replace("'", "").replace("\"", "") + str("000")) for q in arr) + ']'
+            '"{0}"'.format(str(q).replace("'", "").replace("\"", "")) for q in arr) + ']'
     else:
-        return "[" + "\"152" + str(string).replace("'", "") + "000" + "\"]"
+        return "[" + str(string).replace("'", "") + "\"]"
 
 
 def clear():
