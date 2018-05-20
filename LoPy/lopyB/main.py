@@ -63,8 +63,8 @@ def updateLists():
 
 
 def assessSituation():
-    if float(tempList[-1]) > float(30):
-        doUpdate(lightList[-1], tempList[-1], timeList[-1], False)
+    if float(tempList[0]) > float(30):
+        doUpdate(lightList[:1], tempList[:1], timeList[:1], False)
     else:
         doSleep()
 

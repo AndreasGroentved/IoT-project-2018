@@ -128,7 +128,7 @@ def sendOverWifi(dataStringList: list):
 
 def buildJSON(data):
     arr = data.split(":")
-    out = "{\"id\":" + arr[0] + ","
+    out = "{\"id\":" + "\"" + arr[0] + "\","
     out += "\"light\":[" + arr[1] + "],"
     out += "\"temp\":[" + arr[2] + "],"
     out += "\"time\":" + buildTimeJson(arr[3])
