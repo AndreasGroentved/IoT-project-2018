@@ -11,13 +11,6 @@ import bluetooth
 import sd
 import sensor
 
-# TODO synkronize every hour, for demo use button
-# TODO possible time problem
-# TODO send data lora
-# TODO Format data to send
-# TODO format data to save
-
-
 # https://forum.pycom.io/topic/588/interrupt-button-debounce-with-long-short-press/12 used for button
 
 pycom.heartbeat(False)
@@ -57,8 +50,6 @@ def updateLists():
     tempList = updateList(tempList, tempValue)
     timeList = updateTime(timeList, timeValue)
     saveLists()
-    # doUpdate()
-    # sendToServer(buildString())
     assessSituation()
 
 
@@ -97,10 +88,10 @@ def getTime():
     return utime.time() * 1000  # Python yo
 
 
-def doSleep(hasSend=False):  # TODO look at optimizing...
+def doSleep(hasSend=False):
     time = getTime()
-    timeLongDivision = fiveMinutes  # change to hour for real testing
-    timeShortDivision = oneMinuteDivision  # change to five for real testing
+    timeLongDivision = fiveMinutes
+    timeShortDivision = oneMinuteDivision
     timePastShortDivision = (time + timeShortDivision) % timeShortDivision
     timeToNextShortDivision = ((time - timePastShortDivision) + timeShortDivision) - time
 
@@ -115,11 +106,9 @@ def doSleep(hasSend=False):  # TODO look at optimizing...
     else:
         print("equal")
         if hasSend:
-            sleepForMs(timeToNextShortDivision)  # sleep
+            sleepForMs(timeToNextShortDivision)
         else:
             doUpdate(lightList, tempList, timeList, True)
-            # clear()
-            # doSleep(True)
 
 
 def sleepForMs(ms: int):
@@ -159,15 +148,17 @@ def getNull(data):
 def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace("'", "").replace("b", "")
 
 
+def removeFirstAndLastThree(aaa):
+    return str(aaa)[3:-3]
+
+
 def sendToServer(dataString, clear):
     print(dataString)
-    toSend = bluetooth.startSending([tempList, lightList, timeList, ["b"]], afterBLEUpdate, clear)
-    # lora.init()
-    # lora.send(dataString)
+    bluetooth.startSending([map(removeFirstAndLastThree, tempList), lightList, timeList, ["b"]],
+                           afterBLEUpdate, clear)
 
 
 def afterBLEUpdate(clearrr):
-    print("after")
     if clearrr: clear()
     doSleep(True)
 
@@ -179,6 +170,9 @@ def initOperations():
 
 
 initOperations()
+
+# Used for debugging, long pressing the button on the PySense resets board, the button is however unreliable and will trigger randomly
+# the long won't happen randomly, but might not actually happen when long pressing - lesson, the button is mostly useless
 
 butms = 0
 butup = 0

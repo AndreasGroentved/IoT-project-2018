@@ -1,11 +1,7 @@
-import gc
-
 import machine
 import pycom
 import ubinascii
 import utime
-from machine import Pin
-from machine import Timer
 
 import bluetooth
 import lora
@@ -13,15 +9,6 @@ import requests
 import sd
 import sensor
 import wifi
-
-# TODO synkronize every hour, for demo use button
-# TODO possible time problem
-# TODO send data lora
-# TODO Format data to send
-# TODO format data to save
-
-
-# https://forum.pycom.io/topic/588/interrupt-button-debounce-with-long-short-press/12 used for button
 
 pycom.heartbeat(False)
 pycom.rgbled(0x7f00000)
@@ -33,7 +20,6 @@ hourDivision = 3600000
 fifteenMinutesDivision = 900000
 fiveMinutes = 300000
 oneMinuteDivision = 60000
-bluetoothReceiver = "SOMEMACADDRESS"  # TODO find mac adress
 
 
 def restoreTempList():
@@ -55,7 +41,6 @@ def updateLists():
     lightValue = sensor.get_light()
     tempValue = sensor.get_temperature()
     timeValue = str(getTime())
-    print(lightValue)
     lightValue = (lightValue[0] + lightValue[1]) / 2  # TODO fast solution -> find better
     lightList = updateList(lightList, lightValue)
     tempList = updateList(tempList, tempValue)
@@ -144,9 +129,9 @@ def buildTimeJson(string):
         arr = w.split(",")
         print(str(arr))
         return '[' + ', '.join(
-            '"{0}"'.format(str(q).replace("'", "").replace("\"", "")) for q in arr) + ']'
+            '"{0}"'.format("152" + str(q).replace("'", "").replace("\"", "") + "000") for q in arr) + ']'
     else:
-        return "[" + str(string).replace("'", "") + "\"]"
+        return "[\"" + "152" + str(w).replace("'", "").replace("\"", "") + "000" + "\"]"
 
 
 def clear():
@@ -156,20 +141,8 @@ def clear():
 
 
 def doUpdate():
-    # sendToServerLora(buildString())
     clear()
     saveLists()
-
-
-def buildString():
-    lightString = ', '.join('"{0}"'.format(getNull(w)) for w in lightList)
-    tempString = ', '.join('"{0}"'.format(w) for w in tempList)
-    timeString = ', '.join(
-        '"{0}"'.format(str(int(int(w) / 1000))[3:]) for w in timeList)  # look at type
-    ret = "b" + ":" + lightString + ":" + tempString + ":" + timeString
-
-    print(ret)
-    return ret
 
 
 def getNull(data):
@@ -204,10 +177,7 @@ def sendToServerLora(dataString):
     lora.send(data)
 
 
-# def sendWifi(data: list):
-
-
-def checkBluetooth():
+def checkBluetooth():  # scan for nodes advertising data and choose how to send it
     try:
         value = bluetooth.scan(15)
         print("value " + str(value))
@@ -216,13 +186,9 @@ def checkBluetooth():
             return
         wifi = shouldUseWifi(value)
         if wifi:
-            print("wifi")
             sendOverWifi(value)
         else:
-            print("lora")
             sendToServerLora(value)
-        # if value and len(value) > 0:
-        #   sendToServer(':'.join([value['id'], value['li'], value['te'], value['ti']]))
     except Exception as e:
         print("Error " + str(e))
     doSleep(True)
@@ -233,48 +199,9 @@ def shouldUseWifi(data: list): return len(data) > 4
 
 def initOperations():
     sd.init()
-    # lora.init()
     restoreTempList()
     checkBluetooth()
     updateLists()
 
 
 initOperations()
-
-butms = 0
-butup = 0
-
-chrono = Timer.Chrono()
-timer = Timer.Alarm(None, 1.5, periodic=False)
-
-btn = machine.Pin('P14', mode=machine.Pin.IN, pull=machine.Pin.PULL_UP)
-
-
-def long_press_handler(alarm):
-    print("****** LONG PRESS HANDLER ******")
-    # sendToServerLora(buildString())
-
-
-def single_press_handler():
-    print("****** BUTTON PRESSED ******")
-
-
-def btn_press_detected(arg):
-    global chrono, timer
-    try:
-        val = btn()
-        if 0 == val:
-            chrono.reset()
-            chrono.start()
-            timer.callback(long_press_handler)
-        else:
-            timer.callback(None)
-            chrono.stop()
-            t = chrono.read_ms()
-            if (t > 60) & (t < 200):
-                single_press_handler()
-    finally:
-        gc.collect()
-
-
-btn.callback(Pin.IRQ_FALLING | Pin.IRQ_RISING, btn_press_detected)

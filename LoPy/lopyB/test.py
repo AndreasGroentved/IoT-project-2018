@@ -10,3 +10,12 @@ lightString = '[' + ', '.join('"{0}"'.format("%.1f" % round(w, 1)) for w in ligh
 print(lightString)
 
 print(str("123456789abcdef")[3:-3])
+
+bbb = [15200000521, 111222333, 444555666]
+
+
+def removeFirstAndLastThree(aaa):
+    return str(aaa)[3:-3]
+
+
+print(str(map(removeFirstAndLastThree, bbb)))

@@ -34,10 +34,10 @@ def startSending(dataList: list, callback, shouldClear):
     chr3 = srv3.characteristic(uuid=b'time567890123456', value="")
     chr4 = srv4.characteristic(uuid=b'id34567890123456', value="")
 
-    char1_cb = chr1.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char1_cb_handler)
-    char2_cb = chr2.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char2_cb_handler)
-    char3_cb = chr3.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char3_cb_handler)
-    char4_cb = chr4.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char4_cb_handler)
+    chr1.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char1_cb_handler)
+    chr2.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char2_cb_handler)
+    chr3.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char3_cb_handler)
+    chr4.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char4_cb_handler)
 
 
 def inputToCharacteristics(type: int):
@@ -45,33 +45,33 @@ def inputToCharacteristics(type: int):
     global read2
     global read3
     global read4
-    print("1 " + str(read1) + " 2 " + str(read2) + " 3 " + str(read3) + " 4 " + str(read4))
+    print("1 " + str(read1) + " 2 " + str(read2) + " 3 " + str(read3) + " 4 " + str(
+        read4))  # for debugging how far the data transfer is
     if read1 > len(data[0]) and read2 > len(data[0]) and read3 > len(data[0]) and read4 > len(data[0]):
-        return ""
+        return ""  # signal aggregator that all data is read
 
-    print(len(data[0]))
     if type == 0:
         read1 += 1
-        if (read1) > len(data[0]): return "i"
+        if read1 > len(data[0]): return "i" # means no more data on characteristic
         ret = data[0][read1 - 1]
         print(ret)
         return ret
     elif type == 1:
         read2 += 1
-        if (read2) > len(data[0]): return "i"
+        if read2 > len(data[0]): return "i"
         ret = data[1][read2 - 1]
         print(ret)
         return ret
     elif type == 2:
         read3 += 1
-        if (read3) > len(data[0]): return "i"
+        if read3 > len(data[0]): return "i"
         ret = data[2][read3 - 1]
         print(ret)
         return ret
     else:
         read4 += 1
         if read4 - 1 == len(data[0]) and read3 > len(data[0]): return ""
-        if (read4) > len(data[0]): return "i"
+        if read4 > len(data[0]): return "i"
         ret = data[3][0]
         print(ret)
         return ret
@@ -92,8 +92,6 @@ read1 = 0
 
 
 def char1_cb_handler(chr):
-    print("onceA")
-    global read1
     return inputToCharacteristics(0)
 
 
@@ -101,7 +99,6 @@ read2 = 0
 
 
 def char2_cb_handler(chr):
-    print("onceB")
     return inputToCharacteristics(1)
 
 
@@ -109,8 +106,6 @@ read3 = 0
 
 
 def char3_cb_handler(chr):
-    print("onceC")
-    global read3
     return inputToCharacteristics(2)
 
 
@@ -118,6 +113,4 @@ read4 = 0
 
 
 def char4_cb_handler(chr):
-    print("onceD")
-    global read4
     return inputToCharacteristics(3)

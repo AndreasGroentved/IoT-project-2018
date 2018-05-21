@@ -20,12 +20,9 @@ def setTime():
     print(rtc.now())
 
 
-print("reboot")
 print(int(utime.time() * 1000))
-print("sup")
 
-
-if utime.time() < 100:
+if utime.time() < 1000:
     wlan = WLAN(mode=WLAN.STA)
     nets = wlan.scan()
     for net in nets:

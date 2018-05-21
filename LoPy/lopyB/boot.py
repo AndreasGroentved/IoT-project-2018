@@ -3,9 +3,6 @@ import pycom
 import utime
 from network import WLAN
 
-# TODO synkronize every hour
-# TODO possible time problem
-
 pycom.heartbeat(False)
 
 pycom.rgbled(0x7f00000)
@@ -20,11 +17,9 @@ def setTime():
     print(rtc.now())
 
 
-print("reboot")
 print(int(utime.time() * 1000))
-print("sup")
 
-if utime.time() < 100:
+if utime.time() < 10000:
     wlan = WLAN(mode=WLAN.STA)
     nets = wlan.scan()
     for net in nets:
