@@ -1,4 +1,3 @@
-import time
 
 import utime
 from network import Bluetooth
@@ -20,7 +19,7 @@ def scan(maxTime):
 
         if not bt.isscanning():
             bt.start_scan(-1)
-        time.sleep(0.05)
+        utime.sleep(0.05)
         advs = bt.get_advertisements()
 
         if advs is None:
@@ -60,6 +59,3 @@ def scan(maxTime):
                     print(str(inst))
                     if conn is not None: conn.disconnect()
                 break
-            else:
-                # time.sleep(0.1)
-                pass

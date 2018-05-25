@@ -3,9 +3,6 @@ import pycom
 import utime
 from network import WLAN
 
-# TODO synkronize every hour
-# TODO possible time problem
-
 pycom.heartbeat(False)
 
 pycom.rgbled(0x7f00000)

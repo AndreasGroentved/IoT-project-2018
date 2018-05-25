@@ -18,4 +18,4 @@ def removeFirstAndLastThree(aaa):
     return str(aaa)[3:-3]
 
 
-print(str(map(removeFirstAndLastThree, bbb)))
+print(str(list(map(removeFirstAndLastThree, bbb))))

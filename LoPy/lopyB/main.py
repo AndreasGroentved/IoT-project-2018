@@ -149,12 +149,13 @@ def getId(): return str(ubinascii.hexlify(machine.unique_id()).upper()).replace(
 
 
 def removeFirstAndLastThree(aaa):
+    print(aaa)
     return str(aaa)[3:-3]
 
 
 def sendToServer(dataString, clear):
     print(dataString)
-    bluetooth.startSending([map(removeFirstAndLastThree, tempList), lightList, timeList, ["b"]],
+    bluetooth.startSending([tempList, lightList, list(map(removeFirstAndLastThree, timeList)), ["b"]],
                            afterBLEUpdate, clear)
 
 

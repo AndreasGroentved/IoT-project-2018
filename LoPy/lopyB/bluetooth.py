@@ -19,7 +19,7 @@ def startSending(dataList: list, callback, shouldClear):
     pycom.rgbled(0x70000ff)
 
     data = dataList
-    print(str(data))
+    print("data" + str(data))
     bluetooth = Bluetooth()
     bluetooth.set_advertisement(name='Loy', service_uuid=b'1234567890123456')
     bluetooth.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED, handler=conn_cb)
@@ -52,7 +52,7 @@ def inputToCharacteristics(type: int):
 
     if type == 0:
         read1 += 1
-        if read1 > len(data[0]): return "i" # means no more data on characteristic
+        if read1 > len(data[0]): return "i"  # means no more data on characteristic
         ret = data[0][read1 - 1]
         print(ret)
         return ret
